@@ -15,7 +15,7 @@ const NEW_MESSAGE_EVENT = "new-message-event";
 
 const io = socketIO(server, {
   cors: true,
-  origins:["localhost:3000"]
+  origins:["*"]
 });
 
 app.get('/',(req,res)=>{
