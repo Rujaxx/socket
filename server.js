@@ -7,6 +7,8 @@ const socketIO = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
+
+
 // setup the port our backend app will run on
 const PORT = 3030;
 const NEW_MESSAGE_EVENT = "new-message-event";
@@ -16,6 +18,9 @@ const io = socketIO(server, {
   origins:["localhost:3000"]
 });
 
+app.get('/',(req,res)=>{
+  res.send("hello World")
+})
 
 
 const room = "general"
