@@ -11,7 +11,6 @@ const server = http.createServer(app);
 
 // setup the port our backend app will run on
 const PORT = process.env.PORT || 3030;
-const NEW_MESSAGE_EVENT = "new-message-event";
 
 const io = socketIO(server, {
   cors: true,
@@ -33,15 +32,17 @@ io.on('connection', (socket) => {
 
   // when the client emits 'new message', this listens and executes
   socket.on('new message', (data) => {
+    console.log(data);
     // we tell the client to execute 'new message'
     socket.broadcast.emit('new message', {
       username: socket.username,
-      message: data
+      message: data,
     });
   });
 
   // when the client emits 'add user', this listens and executes
   socket.on('add user', (username) => {
+    console.log(`${username} added`)
     if (addedUser) return;
 
     // we store the username in the socket session for this client
@@ -60,6 +61,7 @@ io.on('connection', (socket) => {
 
   // when the client emits 'typing', we broadcast it to others
   socket.on('typing', () => {
+    console.log(" user is typing")
     socket.broadcast.emit('typing', {
       username: socket.username
     });
@@ -74,6 +76,7 @@ io.on('connection', (socket) => {
 
   // when the user disconnects.. perform this
   socket.on('disconnect', () => {
+    console.log(`${username} disconnected`)
     if (addedUser) {
       --numUsers;
 
