@@ -76,7 +76,7 @@ io.on('connection', (socket) => {
 
   // when the user disconnects.. perform this
   socket.on('disconnect', () => {
-    console.log(`${username} disconnected`)
+    console.log(` disconnected`)
     if (addedUser) {
       --numUsers;
 
