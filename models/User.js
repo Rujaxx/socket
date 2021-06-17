@@ -5,7 +5,7 @@ var userSchema = new mongoose.Schema({
   id: { type: String, required: [true, "Please add a id"] },
   gameId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Game",
+    ref: "Room",
     required: true,
   },
   roomId: {

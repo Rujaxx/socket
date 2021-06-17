@@ -8,20 +8,20 @@ const {
   deletewithID,
 } = require("../Repository/gameRepo");
 
-const addGame = async (name) => {
-  if (!name || name === "")
+const addGame = async (fields) => {
+  if (!fields.name || fields.name === "")
     return { message: "Please check the details carefully" };
-  const existingGame = await findbyfield({ name });
+  const existingGame = await findbyfield(fields);
   if (existingGame) {
     return { message: "Same game already exists." };
   }
-  const newGame = await createwithfield({ name });
+  const newGame = await createwithfield(fields);
   return newGame;
 };
-const getGame = async (name) => {
-  if (!name || name === "")
+const getGame = async (fields) => {
+  if (!fields.name || fields.name === "")
     return { message: "Please check the details carefully" };
-  const existingGame = await findbyfield({ name });
+  const existingGame = await findbyfield(fields);
   if (!existingGame) {
     return { message: "Sorry, no game found with the same name" };
   }
@@ -29,9 +29,9 @@ const getGame = async (name) => {
 };
 
 const deleteGame = async (name) => {
-  if (!name || name === "")
+  if (!fields.name || fields.name === "")
     return { message: "Please check the details carefully" };
-  const deletedGame = await deletewithfield({ name });
+  const deletedGame = await deletewithfield(fields);
   if (!deletedGame) {
     return { message: "Sorry, no game found with the same name" };
   }

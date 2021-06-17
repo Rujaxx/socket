@@ -11,6 +11,7 @@ const {
   deleteUser,
   deleteUserBySocketId,
 } = require("./controllers/user");
+const { addRoom } = require("./controllers/room");
 const { deletewithfield } = require("./Repository/userRepo");
 
 //Load env vars

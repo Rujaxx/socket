@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-var gameSchema = mongoose.Schema({
+var gameSchema = new mongoose.Schema({
   name: { type: String, required: [true, "Please add a Game name"] },
 });
 
