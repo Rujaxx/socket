@@ -29,7 +29,11 @@ const deletewithfield = async (fields) => {
   if (fields.name === null || fields.name === "" || fields.name === undefined)
     return { message: "Please enter proper room name" };
 
-  if (fields.game === null || fields.game === "" || fields.game === undefined)
+  if (
+    fields.gameId === null ||
+    fields.gameId === "" ||
+    fields.gameId === undefined
+  )
     return { message: "Please enter proper game name" };
   return await room.findOneAndDelete(fields).select("-__v");
 };

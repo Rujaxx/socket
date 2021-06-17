@@ -9,8 +9,8 @@ const {
 } = require("../Repository/userRepo");
 
 const addUser = async (data) => {
-  //data = { name: "tempUser1", room: "60c967ad4822f33ea1f82bcd",id: "12345678" }
-  if (!data || !data.name || !data.room || !data.id)
+  //data = { name: "tempUser1", roomId: "60c967ad4822f33ea1f82bcd",gameId: "60c967ad4822f33ea1f82bcd",id: "12345678" }
+  if (!data || !data.name || !data.roomId || !data.id || !data.gameId)
     return { message: "Please check the details carefully" };
   const existingUser = await findbyfield(data);
   if (existingUser) {
@@ -21,7 +21,7 @@ const addUser = async (data) => {
 };
 
 const getUser = async (data) => {
-  if (!data || !data.name || !data.room || !data.id)
+  if (!data || !data.name || !data.roomId || !data.id || !data.gameId)
     return { message: "Please check the details carefully" };
   const existingUser = await findbyfield(data);
   if (!existingUser) {

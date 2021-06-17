@@ -10,7 +10,7 @@ const findById = async (mongoId) => {
 };
 const findbyfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
-  return await user.findOne(fields).select("-__v");
+  return await user.findOne(fields).select("-__v").populate("roomId").exec();
 };
 //Update
 const updatewithfield = async (fields, updateddata) => {

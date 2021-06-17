@@ -4,7 +4,6 @@ const http = require("http");
 const dotenv = require("dotenv");
 const socketIO = require("socket.io");
 const connectDB = require("./config/db");
-// const Message = require("./models/messages");
 const {
   addUser,
   getUser,
@@ -21,6 +20,7 @@ dotenv.config({ path: "./config/config.env" });
 connectDB();
 
 const app = express();
+app.use(express.json());
 const server = http.createServer(app);
 
 // setup the port
@@ -31,8 +31,15 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
-app.get("/", (req, res) => {
-  res.send("This is sanity checking");
+app.get("/addUser", async (req, res) => {
+  let resp = await addUser(req.body);
+  res.send(resp);
+  // res.send("This is sanity checking");
+});
+app.get("/", async (req, res) => {
+  let resp = await getUser(req.body);
+  res.send(resp);
+  // res.send("This is sanity checking");
 });
 
 app.get("/messages", (req, res) => {

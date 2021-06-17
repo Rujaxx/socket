@@ -1,19 +1,18 @@
 const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please add a name"],
-  },
-  id: {
-    type: String,
-    required: [true, "Please add a name"],
-  },
-  room: {
+var userSchema = new mongoose.Schema({
+  name: { type: String, required: [true, "Please add a User name"] },
+  id: { type: String, required: [true, "Please add a id"] },
+  gameId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "rooms",
+    ref: "Game",
+    required: true,
+  },
+  roomId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Room",
     required: true,
   },
 });
 
-module.exports = mongoose.model("users", UserSchema);
+module.exports = mongoose.model("User", userSchema);

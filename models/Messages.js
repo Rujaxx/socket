@@ -7,9 +7,9 @@ const MessageSchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "users",
+    ref: "User",
     required: true,
   },
 });
 
-module.exports = mongoose.model("message", MessageSchema);
+module.exports = mongoose.model("Message", MessageSchema);

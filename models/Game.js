@@ -1,10 +1,7 @@
 const mongoose = require("mongoose");
 
-const GameSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please add a name"],
-  },
+var gameSchema = mongoose.Schema({
+  name: { type: String, required: [true, "Please add a Game name"] },
 });
 
-module.exports = mongoose.model("games", GameSchema);
+module.exports = mongoose.model("Game", gameSchema);
