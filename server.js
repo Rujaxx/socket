@@ -7,11 +7,13 @@ const connectDB = require("./config/db");
 const {
   addUser,
   getUser,
+  getActiveUserForaRoom,
   getUserBySocketId,
   deleteUser,
   deleteUserBySocketId,
 } = require("./controllers/user");
-const { addRoom } = require("./controllers/room");
+const { addGame, getGame } = require("./controllers/game");
+const { addRoom, getRoom } = require("./controllers/room");
 const { deletewithfield } = require("./Repository/userRepo");
 
 //Load env vars
@@ -32,13 +34,23 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
+app.get("/addGame", async (req, res) => {
+  let resp = await addGame(req.body);
+  res.send(resp);
+  // res.send("This is sanity checking");
+});
+app.get("/addRoom", async (req, res) => {
+  let resp = await addRoom(req.body);
+  res.send(resp);
+  // res.send("This is sanity checking");
+});
 app.get("/addUser", async (req, res) => {
   let resp = await addUser(req.body);
   res.send(resp);
   // res.send("This is sanity checking");
 });
 app.get("/", async (req, res) => {
-  let resp = await getUser(req.body);
+  let resp = await getActiveUserForaRoom(req.body);
   res.send(resp);
   // res.send("This is sanity checking");
 });
@@ -63,8 +75,107 @@ app.post("/messages", (req, res) => {
 let numUsers = 0;
 
 io.on("connection", (socket) => {
-  let addedUser = false;
-  console.log("user connected");
+  console.log(`${socket.id} is connected`);
+  //user Try to join a room
+  socket.on("join room", async (data) => {
+    //checking if user is already active
+    let checkUser = await getUser({ name: data.user, id: socket.id });
+    //If user found, return error to client
+    if (checkUser._id) {
+      return socket.emit("new room member", {
+        status: 400,
+        message: "You are already in a room",
+      });
+    }
+    //checking if game is available or not
+    let checkGame = await getGame({ name: data.game });
+    //If game not found, return error to client
+    if (!checkGame._id) {
+      return socket.emit("new room member", {
+        status: 400,
+        message: checkGame.message,
+      });
+    }
+    //checking if room is active or not
+    let checkRoom = await getRoom({ name: data.room, gameId: checkGame._id });
+    if (data?.type === "createRoom") {
+      //already room is created, return error to client
+      if (checkRoom._id) {
+        return socket.emit("new room member", {
+          status: 400,
+          message:
+            "Same room already created,Kindly join or create another room",
+        });
+      } else {
+        let newRoom = await addRoom({
+          name: data.room,
+          gameId: checkGame._id,
+        });
+        const newUserData = {
+          name: data?.name,
+          id: socket.id,
+          roomId: newRoom._id,
+          gameId: checkGame._id,
+        };
+        let newUser = await addUser(newUserData);
+        socket.join(newUser.roomId._id);
+        let availableUsers = await getActiveUserForaRoom({
+          roomId: newUser.roomId._id,
+        });
+        io.to(newUser.roomId._id).emit("new room member", {
+          status: 200,
+          data: availableUsers,
+        });
+      }
+    } else if (data?.type === "joinFriends") {
+      if (!checkRoom._id) {
+        return socket.emit("new room member", {
+          status: 400,
+          message:
+            "There is no room with the same name, Please create or join another Room",
+        });
+      } else {
+        const newUserData = {
+          name: data?.name,
+          id: socket.id,
+          roomId: checkRoom._id,
+          gameId: checkGame._id,
+        };
+        let newUser = await addUser(newUserData);
+        socket.join(newUser.roomId._id);
+        let availableUsers = await getActiveUserForaRoom({
+          roomId: newUser.roomId._id,
+        });
+        io.to(newUser.roomId._id).emit("new room member", {
+          status: 200,
+          data: availableUsers,
+        });
+      }
+    }
+    //this section for random user
+    //Still Need to finalize the algorith for random user
+    else {
+      let randomRoomName = Math.random().toString(36).substring(7);
+      let newRoom = await addRoom({
+        name: randomRoomName,
+        gameId: checkGame._id,
+      });
+      const newUserData = {
+        name: data?.name,
+        id: socket.id,
+        roomId: newRoom._id,
+        gameId: checkGame._id,
+      };
+      socket.join(newUser.roomId._id);
+      let availableUsers = await getActiveUserForaRoom({
+        roomId: newUser.roomId._id,
+      });
+      io.to(newUser.roomId._id).emit("new room member", {
+        status: 200,
+        data: availableUsers,
+      });
+    }
+  });
 
   // when the client emits 'new message', this listens and executes
   socket.on("new message", (data) => {
@@ -110,18 +221,14 @@ io.on("connection", (socket) => {
     });
   });
 
-  // when the user disconnects.. perform this
+  // // when the user disconnects.. perform this
   socket.on("disconnect", () => {
-    console.log(` disconnected`);
-    if (addedUser) {
-      --numUsers;
-
-      // echo globally that this client has left
-      socket.broadcast.emit("user left", {
-        username: socket.username,
-        numUsers: numUsers,
-      });
-    }
+    console.log(`${socket.id} is disconnected`);
+    // echo globally that this client has left
+    socket.broadcast.emit("user left", {
+      username: socket.username,
+      numUsers: numUsers,
+    });
   });
 });
 

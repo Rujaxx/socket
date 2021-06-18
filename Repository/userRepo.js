@@ -6,11 +6,27 @@ const createwithfield = async (fields) => {
 };
 //Read
 const findById = async (mongoId) => {
-  return await user.findById(mongoId).select("-__v");
+  return await user
+    .findById(mongoId)
+    .select("-__v")
+    .populate("gameId roomId")
+    .exec();
 };
 const findbyfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
-  return await user.findOne(fields).select("-__v").populate("roomId").exec();
+  return await user
+    .findOne(fields)
+    .select("-__v")
+    .populate("gameId roomId")
+    .exec();
+};
+const findallbyfield = async (fields) => {
+  //fields = {fieldname : fieldvalue}
+  return await user
+    .find(fields)
+    .select("-__v")
+    .populate("gameId roomId")
+    .exec();
 };
 //Update
 const updatewithfield = async (fields, updateddata) => {
@@ -36,6 +52,7 @@ module.exports = {
   createwithfield,
   findById,
   findbyfield,
+  findallbyfield,
   updatewithfield,
   updatewithID,
   deletewithfield,

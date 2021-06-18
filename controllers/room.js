@@ -10,7 +10,6 @@ const {
 
 const addRoom = async (data) => {
   //data = { name: "temp1", game: "60c96505129d49372686d610" }
-  console.log(data);
   if (!data || !data.name || !data.gameId)
     return { message: "Please check the details carefully" };
   const existingRoom = await findbyfield(data);
