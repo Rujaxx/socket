@@ -14,6 +14,7 @@ const {
 } = require("./controllers/user");
 const { addGame, getGame } = require("./controllers/game");
 const { addRoom, getRoom } = require("./controllers/room");
+const { addMessage, getMessage } = require("./controllers/messages");
 const { deletewithfield } = require("./Repository/userRepo");
 
 //Load env vars
@@ -55,20 +56,16 @@ app.get("/", async (req, res) => {
   // res.send("This is sanity checking");
 });
 
-app.get("/messages", (req, res) => {
-  Message.find({}, (err, messages) => {
-    res.send(messages);
-  });
-});
+// app.get("/messages", (req, res) => {
+//   Message.find({}, (err, messages) => {
+//     res.send(messages);
+//   });
+// });
 
-app.post("/messages", (req, res) => {
-  var message = new Message(req.body);
-  message.save((err) => {
-    if (err) sendStatus(500);
-    io.emit("message", req.body);
-    res.sendStatus(200);
-  });
-});
+app.get("/messages",async (req, res) => {
+   let resp = await addMessage(req.body);
+   res.send(resp);
+})
 
 // Chatroom
 
@@ -178,12 +175,16 @@ io.on("connection", (socket) => {
   });
 
   // when the client emits 'new message', this listens and executes
-  socket.on("new message", (data) => {
+  socket.on("new message", async(data) => {
     console.log(data);
     // we tell the client to execute 'new message'
-    socket.broadcast.emit("new message", {
-      username: socket.username,
-      message: data,
+    const newMessage = await addMessage({
+      message: data.message,
+      user: data.user,
+    });
+    socket.emit("new message", {
+      status: 200,
+      data: newMessage,
     });
   });
 
