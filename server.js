@@ -79,7 +79,7 @@ io.on("connection", (socket) => {
   //user Try to join a room
   socket.on("join room", async (data) => {
     //checking if user is already active
-    let checkUser = await getUser({ name: data.user, id: socket.id });
+    let checkUser = await getUser({ name: data.name, id: socket.id });
     //If user found, return error to client
     if (checkUser._id) {
       return socket.emit("new room member", {
@@ -155,25 +155,25 @@ io.on("connection", (socket) => {
     //this section for random user
     //Still Need to finalize the algorith for random user
     else {
-      let randomRoomName = Math.random().toString(36).substring(7);
-      let newRoom = await addRoom({
-        name: randomRoomName,
-        gameId: checkGame._id,
-      });
-      const newUserData = {
-        name: data?.name,
-        id: socket.id,
-        roomId: newRoom._id,
-        gameId: checkGame._id,
-      };
-      socket.join(newUser.roomId._id);
-      let availableUsers = await getActiveUserForaRoom({
-        roomId: newUser.roomId._id,
-      });
-      io.to(newUser.roomId._id).emit("new room member", {
-        status: 200,
-        data: availableUsers,
-      });
+      // let randomRoomName = Math.random().toString(36).substring(7);
+      // let newRoom = await addRoom({
+      //   name: randomRoomName,
+      //   gameId: checkGame._id,
+      // });
+      // const newUserData = {
+      //   name: data?.name,
+      //   id: socket.id,
+      //   roomId: newRoom._id,
+      //   gameId: checkGame._id,
+      // };
+      // socket.join(newUser.roomId._id);
+      // let availableUsers = await getActiveUserForaRoom({
+      //   roomId: newUser.roomId._id,
+      // });
+      // io.to(newUser.roomId._id).emit("new room member", {
+      //   status: 200,
+      //   data: availableUsers,
+      // });
     }
   });
 
