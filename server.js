@@ -14,7 +14,11 @@ const {
 } = require("./controllers/user");
 const { addGame, getGame } = require("./controllers/game");
 const { addRoom, getRoom } = require("./controllers/room");
-const { addMessage, getMessage } = require("./controllers/messages");
+const {
+  addMessage,
+  getMessage,
+  getAllMessages,
+} = require("./controllers/messages");
 const { deletewithfield } = require("./Repository/userRepo");
 
 //Load env vars
@@ -62,11 +66,17 @@ app.get("/", async (req, res) => {
 //   });
 // });
 
-app.get("/messages",async (req, res) => {
-   let resp = await addMessage(req.body);
-   res.send(resp);
-})
-
+app.get("/messages", async (req, res) => {
+  const allMsgData = await getAllMessages();
+  const roomMessages = allMsgData.filter(
+    (message) => String(message.user.roomId) === "60d0c671c5ea0e1e0fab9cd2"
+  );
+  res.send(roomMessages);
+});
+app.post("/messages", async (req, res) => {
+  let resp = await addMessage(req.body);
+  res.send(resp);
+});
 // Chatroom
 
 let numUsers = 0;
@@ -115,13 +125,17 @@ io.on("connection", (socket) => {
           gameId: checkGame._id,
         };
         let newUser = await addUser(newUserData);
-        socket.join(newUser.roomId._id);
+        socket.join(String(newUser.roomId._id));
         let availableUsers = await getActiveUserForaRoom({
           roomId: newUser.roomId._id,
         });
-        io.to(newUser.roomId._id).emit("new room member", {
+        socket.emit("current user", {
           status: 200,
-          data: availableUsers,
+          currentuser: newUser,
+        })
+        io.to(String(newUser.roomId._id)).emit("new room member", {
+          status: 200,
+          currentuser: newUser,
         });
       }
     } else if (data?.type === "joinFriends") {
@@ -139,13 +153,17 @@ io.on("connection", (socket) => {
           gameId: checkGame._id,
         };
         let newUser = await addUser(newUserData);
-        socket.join(newUser.roomId._id);
+        socket.join(String(newUser.roomId._id));
         let availableUsers = await getActiveUserForaRoom({
           roomId: newUser.roomId._id,
         });
-        io.to(newUser.roomId._id).emit("new room member", {
+        socket.emit("current user", {
           status: 200,
-          data: availableUsers,
+          currentuser: newUser,
+        })
+        io.to(String(newUser.roomId._id)).emit("new room member", {
+          status: 200,
+          currentuser: newUser,
         });
       }
     }
@@ -167,7 +185,7 @@ io.on("connection", (socket) => {
       // let availableUsers = await getActiveUserForaRoom({
       //   roomId: newUser.roomId._id,
       // });
-      // io.to(newUser.roomId._id).emit("new room member", {
+      // io.to(String(newUser.roomId._id)).emit("new room member", {
       //   status: 200,
       //   data: availableUsers,
       // });
@@ -175,52 +193,83 @@ io.on("connection", (socket) => {
   });
 
   // when the client emits 'new message', this listens and executes
-  socket.on("new message", async(data) => {
-    console.log(data);
-    // we tell the client to execute 'new message'
-    const newMessage = await addMessage({
-      message: data.message,
-      user: data.user,
-    });
-    socket.emit("new message", {
-      status: 200,
-      data: newMessage,
-    });
+  socket.on("send message", async (data) => {
+    let checkUser = await getUserBySocketId(socket.id);
+    if (checkUser.message) {
+      return socket.emit("new message", {
+        status: 400,
+        message: checkUser.message,
+      });
+    } else {
+      const newMessage = await addMessage({
+        message: data.message,
+        user: checkUser._id,
+      });
+      const allMsgData = await getAllMessages();
+      const roomMessages = allMsgData.filter(
+        (message) =>
+          message.user !== null &&
+          String(message.user.roomId) === String(checkUser.roomId._id)
+      );
+      io.to(String(checkUser.roomId._id)).emit("new message", {
+        status: 200,
+        data: roomMessages,
+      });
+    }
   });
-
-  // when the client emits 'add user', this listens and executes
-  socket.on("add user", (username) => {
-    console.log(`${username} added`);
-    if (addedUser) return;
-
-    // we store the username in the socket session for this client
-    socket.username = username;
-    ++numUsers;
-    addedUser = true;
-    socket.emit("login", {
-      numUsers: numUsers,
-    });
-    // echo globally (all clients) that a person has connected
-    socket.broadcast.emit("user joined", {
-      username: socket.username,
-      numUsers: numUsers,
-    });
+  socket.on("receive message", async () => {
+    let checkUser = await getUserBySocketId(socket.id);
+    if (checkUser.message) {
+      return socket.emit("new message", {
+        status: 400,
+        message: checkUser.message,
+      });
+    } else {
+      const allMsgData = await getAllMessages();
+      const roomMessages = allMsgData.filter(
+        (message) =>
+        message.user !== null &&
+        String(message.user.roomId) === String(checkUser.roomId._id)
+        );
+        io.to(String(checkUser.roomId._id)).emit("new message", {
+        status: 200,
+        data: roomMessages,
+      });
+    }
   });
+  // // when the client emits 'add user', this listens and executes
+  // socket.on("add user", (username) => {
+  //   console.log(`${username} added`);
+  //   if (addedUser) return;
 
-  // when the client emits 'typing', we broadcast it to others
-  socket.on("typing", () => {
-    console.log(" user is typing");
-    socket.broadcast.emit("typing", {
-      username: socket.username,
-    });
-  });
+  //   // we store the username in the socket session for this client
+  //   socket.username = username;
+  //   ++numUsers;
+  //   addedUser = true;
+  //   socket.emit("login", {
+  //     numUsers: numUsers,
+  //   });
+  //   // echo globally (all clients) that a person has connected
+  //   socket.broadcast.emit("user joined", {
+  //     username: socket.username,
+  //     numUsers: numUsers,
+  //   });
+  // });
 
-  // when the client emits 'stop typing', we broadcast it to others
-  socket.on("stop typing", () => {
-    socket.broadcast.emit("stop typing", {
-      username: socket.username,
-    });
-  });
+  // // when the client emits 'typing', we broadcast it to others
+  // socket.on("typing", () => {
+  //   console.log(" user is typing");
+  //   socket.broadcast.emit("typing", {
+  //     username: socket.username,
+  //   });
+  // });
+
+  // // when the client emits 'stop typing', we broadcast it to others
+  // socket.on("stop typing", () => {
+  //   socket.broadcast.emit("stop typing", {
+  //     username: socket.username,
+  //   });
+  // });
 
   // // when the user disconnects.. perform this
   socket.on("disconnect", () => {

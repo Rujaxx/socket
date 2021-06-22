@@ -6,11 +6,11 @@ const createwithfield = async (fields) => {
 };
 //Read
 const findById = async (mongoId) => {
-  return await messages.findById(mongoId, "name");
+  return await messages.findById(mongoId).select("-__v").populate("user");
 };
 const findbyfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
-  return await messages.findOne(fields, "name");
+  return await messages.find(fields).select("-__v").populate("user");
 };
 //Update
 const updatewithfield = async (fields, updateddata) => {
