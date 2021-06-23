@@ -12,6 +12,10 @@ const findbyfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
   return await room.findOne(fields).select("-__v").populate("gameId");
 };
+const findAll= async (fields) => {
+  //fields = {fieldname : fieldvalue}
+  return await room.find().select("-__v");
+};
 //Update
 const updatewithfield = async (fields, updateddata) => {
   //fields = {fieldname : fieldvalue}
@@ -49,4 +53,5 @@ module.exports = {
   updatewithID,
   deletewithfield,
   deletewithID,
+  findAll
 };

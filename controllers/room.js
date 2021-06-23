@@ -2,6 +2,7 @@ const {
   createwithfield,
   findById,
   findbyfield,
+  findAll,
   updatewithfield,
   updatewithID,
   deletewithfield,
@@ -28,7 +29,17 @@ const getRoom = async (data) => {
   }
   return existingRoom;
 };
-
+const getRoomById = async (id) => {
+  const existingRoom = await findById(id);
+  if (!existingRoom) {
+    return { message: "Sorry, no room found with the same name" };
+  }
+  return existingRoom;
+};
+const allRoom = async () => {
+  const allRoom = await findAll();
+  return allRoom;
+};
 const deleteRoom = async (data) => {
   if (!data || !data.name || !data.game)
     return { message: "Please check the details carefully" };
@@ -42,5 +53,7 @@ const deleteRoom = async (data) => {
 module.exports = {
   addRoom,
   getRoom,
+  getRoomById,
+  allRoom,
   deleteRoom,
 };

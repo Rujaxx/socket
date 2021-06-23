@@ -13,7 +13,7 @@ const {
   deleteUserBySocketId,
 } = require("./controllers/user");
 const { addGame, getGame } = require("./controllers/game");
-const { addRoom, getRoom } = require("./controllers/room");
+const { addRoom, getRoom,allRoom,getRoomById } = require("./controllers/room");
 const {
   addMessage,
   getMessage,
@@ -39,15 +39,32 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
-app.get("/addGame", async (req, res) => {
-  let resp = await addGame(req.body);
-  res.send(resp);
-  // res.send("This is sanity checking");
-});
 app.get("/addRoom", async (req, res) => {
   let resp = await addRoom(req.body);
   res.send(resp);
   // res.send("This is sanity checking");
+});
+app.get("/allRoom", async (req, res) => {
+  const allAvailableRoom = await allRoom();
+      const filteringRoom = (arr) => {
+        let temp = arr.filter(x => x.roomType === "private")
+        return temp
+      }
+      const onlyRandomRoom = filteringRoom(allAvailableRoom);
+      var joinableRoomId = "";
+      for (let index = 0; index < onlyRandomRoom.length; index++) {
+        let availableUsers = await getActiveUserForaRoom({
+          roomId: onlyRandomRoom[index]._id,
+        });
+        if(!availableUsers.message && availableUsers.length <2 ){
+            joinableRoomId = String(onlyRandomRoom[index]._id)
+            break;
+          }
+        }
+        console.log(joinableRoomId)
+      let checkRoom = await getRoomById(joinableRoomId);
+      res.send(checkRoom);
+
 });
 app.get("/addUser", async (req, res) => {
   let resp = await addUser(req.body);
@@ -117,6 +134,7 @@ io.on("connection", (socket) => {
         let newRoom = await addRoom({
           name: data.room,
           gameId: checkGame._id,
+          roomType: "private"
         });
         const newUserData = {
           name: data?.name,
@@ -170,25 +188,70 @@ io.on("connection", (socket) => {
     //this section for random user
     //Still Need to finalize the algorith for random user
     else {
-      // let randomRoomName = Math.random().toString(36).substring(7);
-      // let newRoom = await addRoom({
-      //   name: randomRoomName,
-      //   gameId: checkGame._id,
-      // });
-      // const newUserData = {
-      //   name: data?.name,
-      //   id: socket.id,
-      //   roomId: newRoom._id,
-      //   gameId: checkGame._id,
-      // };
-      // socket.join(newUser.roomId._id);
-      // let availableUsers = await getActiveUserForaRoom({
-      //   roomId: newUser.roomId._id,
-      // });
-      // io.to(String(newUser.roomId._id)).emit("new room member", {
-      //   status: 200,
-      //   data: availableUsers,
-      // });
+      const allAvailableRoom = await allRoom();
+      const filteringRoom = (arr) => {
+        let temp = arr.filter(x => x.roomType === "random")
+        return temp
+      }
+      const onlyRandomRoom = filteringRoom(allAvailableRoom);
+      var joinableRoomId = "";
+      for (let index = 0; index < onlyRandomRoom.length; index++) {
+        let availableUsers = await getActiveUserForaRoom({
+          roomId: onlyRandomRoom[index]._id,
+        });
+        if(!availableUsers.message && availableUsers.length <10 ){
+            joinableRoomId = String(onlyRandomRoom[index]._id)
+            break;
+          }
+        }
+        if(joinableRoomId) {
+        let checkingRoom = await getRoomById(joinableRoomId);
+        const newUserData = {
+          name: data?.name,
+          id: socket.id,
+          roomId: checkingRoom._id,
+          gameId: checkGame._id,
+        };
+        let newUser = await addUser(newUserData);
+        socket.join(String(newUser.roomId._id));
+        let availableUsers = await getActiveUserForaRoom({
+          roomId: newUser.roomId._id,
+        });
+        socket.emit("current user", {
+          status: 200,
+          currentuser: newUser,
+        })
+        io.to(String(newUser.roomId._id)).emit("new room member", {
+          status: 200,
+          currentuser: newUser,
+        });
+      } else {
+        let randomRoomName = Math.random().toString(36).substring(7);
+        let newRoom = await addRoom({
+          name: randomRoomName,
+          gameId: checkGame._id,
+          roomType: "random"
+        });
+        const newUserData = {
+          name: data?.name,
+          id: socket.id,
+          roomId: newRoom._id,
+          gameId: checkGame._id,
+        };
+        let newUser = await addUser(newUserData);
+        socket.join(String(newUser.roomId._id));
+        let availableUsers = await getActiveUserForaRoom({
+          roomId: newUser.roomId._id,
+        });
+        socket.emit("current user", {
+          status: 200,
+          currentuser: newUser,
+        })
+        io.to(String(newUser.roomId._id)).emit("new room member", {
+          status: 200,
+          currentuser: newUser,
+        });
+      }
     }
   });
 
