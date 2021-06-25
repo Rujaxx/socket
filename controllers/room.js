@@ -40,10 +40,9 @@ const allRoom = async () => {
   const allRoom = await findAll();
   return allRoom;
 };
-const deleteRoom = async (data) => {
-  if (!data || !data.name || !data.game)
-    return { message: "Please check the details carefully" };
-  const deletedRoom = await deletewithfield(data);
+const deleteRoom = async (id) => {
+  if (!id) return { message: "Please check the details carefully" };
+  const deletedRoom = await deletewithID(id);
   if (!deletedRoom) {
     return { message: "Sorry, no room found with the same name" };
   }

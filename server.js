@@ -9,11 +9,16 @@ const {
   getUser,
   getActiveUserForaRoom,
   getUserBySocketId,
-  deleteUser,
   deleteUserBySocketId,
 } = require("./controllers/user");
 const { addGame, getGame } = require("./controllers/game");
-const { addRoom, getRoom,allRoom,getRoomById } = require("./controllers/room");
+const {
+  addRoom,
+  getRoom,
+  allRoom,
+  getRoomById,
+  deleteRoom,
+} = require("./controllers/room");
 const {
   addMessage,
   getMessage,
@@ -46,25 +51,24 @@ app.get("/addRoom", async (req, res) => {
 });
 app.get("/allRoom", async (req, res) => {
   const allAvailableRoom = await allRoom();
-      const filteringRoom = (arr) => {
-        let temp = arr.filter(x => x.roomType === "private")
-        return temp
-      }
-      const onlyRandomRoom = filteringRoom(allAvailableRoom);
-      var joinableRoomId = "";
-      for (let index = 0; index < onlyRandomRoom.length; index++) {
-        let availableUsers = await getActiveUserForaRoom({
-          roomId: onlyRandomRoom[index]._id,
-        });
-        if(!availableUsers.message && availableUsers.length <2 ){
-            joinableRoomId = String(onlyRandomRoom[index]._id)
-            break;
-          }
-        }
-        console.log(joinableRoomId)
-      let checkRoom = await getRoomById(joinableRoomId);
-      res.send(checkRoom);
-
+  const filteringRoom = (arr) => {
+    let temp = arr.filter((x) => x.roomType === "private");
+    return temp;
+  };
+  const onlyRandomRoom = filteringRoom(allAvailableRoom);
+  var joinableRoomId = "";
+  for (let index = 0; index < onlyRandomRoom.length; index++) {
+    let availableUsers = await getActiveUserForaRoom({
+      roomId: onlyRandomRoom[index]._id,
+    });
+    if (!availableUsers.message && availableUsers.length < 2) {
+      joinableRoomId = String(onlyRandomRoom[index]._id);
+      break;
+    }
+  }
+  console.log(joinableRoomId);
+  let checkRoom = await getRoomById(joinableRoomId);
+  res.send(checkRoom);
 });
 app.get("/addUser", async (req, res) => {
   let resp = await addUser(req.body);
@@ -90,8 +94,8 @@ app.get("/messages", async (req, res) => {
   );
   res.send(roomMessages);
 });
-app.post("/messages", async (req, res) => {
-  let resp = await addMessage(req.body);
+app.post("/deleteRoom", async (req, res) => {
+  let resp = await deleteRoom(req.body._id);
   res.send(resp);
 });
 // Chatroom
@@ -134,7 +138,7 @@ io.on("connection", (socket) => {
         let newRoom = await addRoom({
           name: data.room,
           gameId: checkGame._id,
-          roomType: "private"
+          roomType: "private",
         });
         const newUserData = {
           name: data?.name,
@@ -150,10 +154,10 @@ io.on("connection", (socket) => {
         socket.emit("current user", {
           status: 200,
           currentuser: newUser,
-        })
+        });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
-          currentuser: newUser,
+          data: availableUsers,
         });
       }
     } else if (data?.type === "joinFriends") {
@@ -178,10 +182,10 @@ io.on("connection", (socket) => {
         socket.emit("current user", {
           status: 200,
           currentuser: newUser,
-        })
+        });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
-          currentuser: newUser,
+          data: availableUsers,
         });
       }
     }
@@ -190,21 +194,21 @@ io.on("connection", (socket) => {
     else {
       const allAvailableRoom = await allRoom();
       const filteringRoom = (arr) => {
-        let temp = arr.filter(x => x.roomType === "random")
-        return temp
-      }
+        let temp = arr.filter((x) => x.roomType === "random");
+        return temp;
+      };
       const onlyRandomRoom = filteringRoom(allAvailableRoom);
       var joinableRoomId = "";
       for (let index = 0; index < onlyRandomRoom.length; index++) {
         let availableUsers = await getActiveUserForaRoom({
           roomId: onlyRandomRoom[index]._id,
         });
-        if(!availableUsers.message && availableUsers.length <10 ){
-            joinableRoomId = String(onlyRandomRoom[index]._id)
-            break;
-          }
+        if (!availableUsers.message && availableUsers.length < 10) {
+          joinableRoomId = String(onlyRandomRoom[index]._id);
+          break;
         }
-        if(joinableRoomId) {
+      }
+      if (joinableRoomId) {
         let checkingRoom = await getRoomById(joinableRoomId);
         const newUserData = {
           name: data?.name,
@@ -220,17 +224,17 @@ io.on("connection", (socket) => {
         socket.emit("current user", {
           status: 200,
           currentuser: newUser,
-        })
+        });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
-          currentuser: newUser,
+          currentuser: availableUsers,
         });
       } else {
         let randomRoomName = Math.random().toString(36).substring(7);
         let newRoom = await addRoom({
           name: randomRoomName,
           gameId: checkGame._id,
-          roomType: "random"
+          roomType: "random",
         });
         const newUserData = {
           name: data?.name,
@@ -246,7 +250,7 @@ io.on("connection", (socket) => {
         socket.emit("current user", {
           status: 200,
           currentuser: newUser,
-        })
+        });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
           currentuser: newUser,
@@ -267,16 +271,13 @@ io.on("connection", (socket) => {
       const newMessage = await addMessage({
         message: data.message,
         user: checkUser._id,
+        userName: checkUser.name,
+        roomId: checkUser.roomId._id,
       });
-      const allMsgData = await getAllMessages();
-      const roomMessages = allMsgData.filter(
-        (message) =>
-          message.user !== null &&
-          String(message.user.roomId) === String(checkUser.roomId._id)
-      );
+      const allMsgData = await getAllMessages({ roomId: checkUser.roomId._id });
       io.to(String(checkUser.roomId._id)).emit("new message", {
         status: 200,
-        data: roomMessages,
+        data: allMsgData,
       });
     }
   });
@@ -288,15 +289,10 @@ io.on("connection", (socket) => {
         message: checkUser.message,
       });
     } else {
-      const allMsgData = await getAllMessages();
-      const roomMessages = allMsgData.filter(
-        (message) =>
-        message.user !== null &&
-        String(message.user.roomId) === String(checkUser.roomId._id)
-        );
-        io.to(String(checkUser.roomId._id)).emit("new message", {
+      const allMsgData = await getAllMessages({ roomId: checkUser.roomId._id });
+      io.to(String(checkUser.roomId._id)).emit("new message", {
         status: 200,
-        data: roomMessages,
+        data: allMsgData,
       });
     }
   });
@@ -335,13 +331,26 @@ io.on("connection", (socket) => {
   // });
 
   // // when the user disconnects.. perform this
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log(`${socket.id} is disconnected`);
-    // echo globally that this client has left
-    socket.broadcast.emit("user left", {
-      username: socket.username,
-      numUsers: numUsers,
-    });
+    let checkUser = await getUserBySocketId(socket.id);
+    if (checkUser) {
+      await deleteUserBySocketId(socket.id);
+      let availableUsers = await getActiveUserForaRoom({
+        roomId: checkUser.roomId._id,
+      });
+      const clients = io.sockets.adapter.rooms.get(
+        String(checkUser.roomId._id)
+      );
+      if (clients === undefined) {
+        await deleteRoom(checkUser.roomId._id);
+      } else {
+        io.to(String(checkUser.roomId._id)).emit("new room member", {
+          status: 200,
+          data: availableUsers,
+        });
+      }
+    }
   });
 });
 

@@ -22,8 +22,8 @@ const getMessage = async (data) => {
   }
   return allMessages;
 };
-const getAllMessages = async () => {
-  const allMessages = await findbyfield();
+const getAllMessages = async (data) => {
+  const allMessages = await findbyfield(data);
   return allMessages;
 };
 
