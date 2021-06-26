@@ -44,42 +44,46 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
-app.get("/addRoom", async (req, res) => {
-  let resp = await addRoom(req.body);
-  res.send(resp);
-  // res.send("This is sanity checking");
-});
-app.get("/allRoom", async (req, res) => {
-  const allAvailableRoom = await allRoom();
-  const filteringRoom = (arr) => {
-    let temp = arr.filter((x) => x.roomType === "private");
-    return temp;
-  };
-  const onlyRandomRoom = filteringRoom(allAvailableRoom);
-  var joinableRoomId = "";
-  for (let index = 0; index < onlyRandomRoom.length; index++) {
-    let availableUsers = await getActiveUserForaRoom({
-      roomId: onlyRandomRoom[index]._id,
-    });
-    if (!availableUsers.message && availableUsers.length < 2) {
-      joinableRoomId = String(onlyRandomRoom[index]._id);
-      break;
-    }
-  }
-  console.log(joinableRoomId);
-  let checkRoom = await getRoomById(joinableRoomId);
-  res.send(checkRoom);
-});
-app.get("/addUser", async (req, res) => {
-  let resp = await addUser(req.body);
-  res.send(resp);
-  // res.send("This is sanity checking");
-});
-app.get("/", async (req, res) => {
-  let resp = await getActiveUserForaRoom(req.body);
-  res.send(resp);
-  // res.send("This is sanity checking");
-});
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
+// app.get("/addRoom", async (req, res) => {
+//   let resp = await addRoom(req.body);
+//   res.send(resp);
+//   // res.send("This is sanity checking");
+// });
+// app.get("/allRoom", async (req, res) => {
+//   const allAvailableRoom = await allRoom();
+//   const filteringRoom = (arr) => {
+//     let temp = arr.filter((x) => x.roomType === "private");
+//     return temp;
+//   };
+//   const onlyRandomRoom = filteringRoom(allAvailableRoom);
+//   var joinableRoomId = "";
+//   for (let index = 0; index < onlyRandomRoom.length; index++) {
+//     let availableUsers = await getActiveUserForaRoom({
+//       roomId: onlyRandomRoom[index]._id,
+//     });
+//     if (!availableUsers.message && availableUsers.length < 2) {
+//       joinableRoomId = String(onlyRandomRoom[index]._id);
+//       break;
+//     }
+//   }
+//   console.log(joinableRoomId);
+//   let checkRoom = await getRoomById(joinableRoomId);
+//   res.send(checkRoom);
+// });
+// app.get("/addUser", async (req, res) => {
+//   let resp = await addUser(req.body);
+//   res.send(resp);
+//   // res.send("This is sanity checking");
+// });
+// app.get("/", async (req, res) => {
+//   let resp = await getActiveUserForaRoom(req.body);
+//   res.send(resp);
+//   // res.send("This is sanity checking");
+// });
 
 // app.get("/messages", (req, res) => {
 //   Message.find({}, (err, messages) => {
@@ -87,18 +91,18 @@ app.get("/", async (req, res) => {
 //   });
 // });
 
-app.get("/messages", async (req, res) => {
-  const allMsgData = await getAllMessages();
-  const roomMessages = allMsgData.filter(
-    (message) => String(message.user.roomId) === "60d0c671c5ea0e1e0fab9cd2"
-  );
-  res.send(roomMessages);
-});
-app.post("/deleteRoom", async (req, res) => {
-  let resp = await deleteRoom(req.body._id);
-  res.send(resp);
-});
-// Chatroom
+// app.get("/messages", async (req, res) => {
+//   const allMsgData = await getAllMessages();
+//   const roomMessages = allMsgData.filter(
+//     (message) => String(message.user.roomId) === "60d0c671c5ea0e1e0fab9cd2"
+//   );
+//   res.send(roomMessages);
+// });
+// app.post("/deleteRoom", async (req, res) => {
+//   let resp = await deleteRoom(req.body._id);
+//   res.send(resp);
+// });
+// // Chatroom
 
 let numUsers = 0;
 
