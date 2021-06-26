@@ -26,7 +26,7 @@ const updatewithID = async (id, updateddata) => {
 //Delete
 const deletewithfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
-  return await messages.findOneAndDelete(fields);
+  return await messages.deleteMany(fields);
 };
 const deletewithID = async (id) => {
   return await messages.findByIdAndDelete(id);

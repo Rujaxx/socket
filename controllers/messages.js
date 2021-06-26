@@ -27,19 +27,18 @@ const getAllMessages = async (data) => {
   return allMessages;
 };
 
-const deleteRoom = async (data) => {
-  if (!data || !data.name)
-    return { message: "Please check the details carefully" };
-  const deletedRoom = await deletewithfield(data);
-  if (!deletedRoom) {
-    return { message: "Sorry, no room found with the same name" };
+const deleteRoomMessage = async (roomId) => {
+  if (!roomId) return { message: "Please check the details carefully" };
+  const deletedRoomMessage = await deletewithfield({ roomId });
+  if (deletedRoomMessage.deletedCount === 0) {
+    return { message: "Sorry, no messages found to delete" };
   }
-  return deletedRoom;
+  return { Message_deleted: deletedRoomMessage.deletedCount };
 };
 
 module.exports = {
   addMessage,
   getMessage,
-  deleteRoom,
   getAllMessages,
+  deleteRoomMessage,
 };

@@ -21,8 +21,8 @@ const {
 } = require("./controllers/room");
 const {
   addMessage,
-  getMessage,
   getAllMessages,
+  deleteRoomMessage,
 } = require("./controllers/messages");
 const { deletewithfield } = require("./Repository/userRepo");
 
@@ -49,26 +49,9 @@ app.get("/addRoom", async (req, res) => {
   res.send(resp);
   // res.send("This is sanity checking");
 });
-app.get("/allRoom", async (req, res) => {
-  const allAvailableRoom = await allRoom();
-  const filteringRoom = (arr) => {
-    let temp = arr.filter((x) => x.roomType === "private");
-    return temp;
-  };
-  const onlyRandomRoom = filteringRoom(allAvailableRoom);
-  var joinableRoomId = "";
-  for (let index = 0; index < onlyRandomRoom.length; index++) {
-    let availableUsers = await getActiveUserForaRoom({
-      roomId: onlyRandomRoom[index]._id,
-    });
-    if (!availableUsers.message && availableUsers.length < 2) {
-      joinableRoomId = String(onlyRandomRoom[index]._id);
-      break;
-    }
-  }
-  console.log(joinableRoomId);
-  let checkRoom = await getRoomById(joinableRoomId);
-  res.send(checkRoom);
+app.get("/delete", async (req, res) => {
+  let resp = await deleteRoomMessage(req.body.roomId);
+  res.send(resp);
 });
 app.get("/addUser", async (req, res) => {
   let resp = await addUser(req.body);
@@ -227,7 +210,7 @@ io.on("connection", (socket) => {
         });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
-          currentuser: availableUsers,
+          data: availableUsers,
         });
       } else {
         let randomRoomName = Math.random().toString(36).substring(7);
@@ -253,7 +236,7 @@ io.on("connection", (socket) => {
         });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
-          currentuser: newUser,
+          data: availableUsers,
         });
       }
     }
@@ -344,6 +327,7 @@ io.on("connection", (socket) => {
       );
       if (clients === undefined) {
         await deleteRoom(checkUser.roomId._id);
+        await deleteRoomMessage(checkUser.roomId._id);
       } else {
         io.to(String(checkUser.roomId._id)).emit("new room member", {
           status: 200,
