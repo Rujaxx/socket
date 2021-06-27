@@ -48,7 +48,7 @@ const io = socketIO(server, {
 app.get("/",(req, res) => {
   res.send("Sanity Check");
 });
-// Socket Secti
+// Socket Section
 
 io.on("connection", (socket) => {
   console.log(`${socket.id} is connected`);

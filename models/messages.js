@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const
 
 const MessageSchema = new mongoose.Schema({
     Message: {
@@ -13,7 +12,7 @@ const MessageSchema = new mongoose.Schema({
       }
 })
 
-module.exports = mongoose.model("message", UserSchema)
+module.exports = mongoose.model("message", MessageSchema)
 
 
 

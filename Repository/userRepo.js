@@ -1,4 +1,4 @@
-const user = require("../models/User");
+const user = require("../models/user");
 //Create
 const createwithfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
