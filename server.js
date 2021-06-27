@@ -4,27 +4,28 @@ const http = require("http");
 const dotenv = require("dotenv");
 const socketIO = require("socket.io");
 const connectDB = require("./config/db");
-const {
-  addUser,
-  getUser,
-  getActiveUserForaRoom,
-  getUserBySocketId,
-  deleteUserBySocketId,
-} = require("./controllers/user");
-const { addGame, getGame } = require("./controllers/game");
+const { addGame, getGame, deleteGame } = require("./controllers/game");
 const {
   addRoom,
   getRoom,
-  allRoom,
   getRoomById,
+  allRoom,
   deleteRoom,
 } = require("./controllers/room");
+const {
+  addUser,
+  getUser,
+  getUserBySocketId,
+  getActiveUserForaRoom,
+  deleteUser,
+  deleteUserBySocketId,
+} = require("./controllers/user");
 const {
   addMessage,
   getMessage,
   getAllMessages,
+  deleteRoomMessage,
 } = require("./controllers/messages");
-const { deletewithfield } = require("./Repository/userRepo");
 
 //Load env vars
 dotenv.config({ path: "./config/config.env" });
@@ -44,6 +45,7 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
+<<<<<<< HEAD
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
@@ -105,6 +107,12 @@ app.get('/', (req, res) => {
 // // Chatroom
 
 let numUsers = 0;
+=======
+app.get("/", async (req, res) => {
+  res.send("Sanity Check");
+});
+// Socket Secti
+>>>>>>> samrat
 
 io.on("connection", (socket) => {
   console.log(`${socket.id} is connected`);
@@ -231,7 +239,7 @@ io.on("connection", (socket) => {
         });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
-          currentuser: availableUsers,
+          data: availableUsers,
         });
       } else {
         let randomRoomName = Math.random().toString(36).substring(7);
@@ -257,7 +265,7 @@ io.on("connection", (socket) => {
         });
         io.to(String(newUser.roomId._id)).emit("new room member", {
           status: 200,
-          currentuser: newUser,
+          data: availableUsers,
         });
       }
     }
@@ -285,20 +293,12 @@ io.on("connection", (socket) => {
       });
     }
   });
-  socket.on("receive message", async () => {
-    let checkUser = await getUserBySocketId(socket.id);
-    if (checkUser.message) {
-      return socket.emit("new message", {
-        status: 400,
-        message: checkUser.message,
-      });
-    } else {
-      const allMsgData = await getAllMessages({ roomId: checkUser.roomId._id });
-      io.to(String(checkUser.roomId._id)).emit("new message", {
-        status: 200,
-        data: allMsgData,
-      });
-    }
+  socket.on("receive message", async (data) => {
+    const allMsgData = await getAllMessages({ roomId: data });
+    io.to(String(data)).emit("new message", {
+      status: 200,
+      data: allMsgData,
+    });
   });
   // // when the client emits 'add user', this listens and executes
   // socket.on("add user", (username) => {
@@ -338,7 +338,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", async () => {
     console.log(`${socket.id} is disconnected`);
     let checkUser = await getUserBySocketId(socket.id);
-    if (checkUser) {
+    if (!checkUser.message) {
       await deleteUserBySocketId(socket.id);
       let availableUsers = await getActiveUserForaRoom({
         roomId: checkUser.roomId._id,
@@ -348,6 +348,7 @@ io.on("connection", (socket) => {
       );
       if (clients === undefined) {
         await deleteRoom(checkUser.roomId._id);
+        await deleteRoomMessage(checkUser.roomId._id);
       } else {
         io.to(String(checkUser.roomId._id)).emit("new room member", {
           status: 200,
