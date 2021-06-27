@@ -47,7 +47,7 @@ const io = socketIO(server, {
 app.post("/", async (req, res) => {
   res.send("Sanity Check");
 });
-// Chatroom
+// Socket Section
 
 let numUsers = 0;
 
