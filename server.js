@@ -45,10 +45,10 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
-app.get("/",(req, res) => {
+app.get("/", async (req, res) => {
   res.send("Sanity Check");
 });
-// Socket Section
+// Socket Secti
 
 io.on("connection", (socket) => {
   console.log(`${socket.id} is connected`);
