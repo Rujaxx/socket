@@ -1,4 +1,4 @@
-const messages = require("../models/messages");
+const messages = require("../models/Messages");
 //Create
 const createwithfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
