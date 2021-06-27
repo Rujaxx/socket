@@ -27,6 +27,13 @@ const {
   deleteRoomMessage,
 } = require("./controllers/messages");
 
+const {
+  addGameState,
+  getGameState,
+  getAllGameStates,
+  deleteRoomGameState,
+} = require("./controllers/gameStates");
+
 //Load env vars
 dotenv.config({ path: "./config/config.env" });
 
