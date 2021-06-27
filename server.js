@@ -45,7 +45,7 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
-app.get("/", async (req, res) => {
+app.get("/",(req, res) => {
   res.send("Sanity Check");
 });
 // Socket Secti
