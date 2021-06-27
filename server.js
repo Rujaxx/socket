@@ -47,9 +47,7 @@ const io = socketIO(server, {
 app.post("/", async (req, res) => {
   res.send("Sanity Check");
 });
-// Socket Section
-
-let numUsers = 0;
+// Socket Secti
 
 io.on("connection", (socket) => {
   console.log(`${socket.id} is connected`);
