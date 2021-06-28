@@ -4,6 +4,7 @@ const http = require("http");
 const dotenv = require("dotenv");
 const socketIO = require("socket.io");
 const connectDB = require("./config/db");
+const contactus = require("./models/ContactUs");
 const { addGame, getGame, deleteGame } = require("./controllers/game");
 const {
   addRoom,
@@ -42,6 +43,7 @@ connectDB();
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 const server = http.createServer(app);
 
 // setup the port
@@ -52,11 +54,26 @@ const io = socketIO(server, {
   origins: ["*"],
 });
 
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
   res.send("Sanity Check");
 });
-// Socket Secti
-
+app.post("/contactUs", async (req, res) => {
+  let formData = req.body;
+  await contactus
+    .create(formData)
+    .then((data) => {
+      res
+        .status(200)
+        .send({ message: "Your query has been submitted successfully." });
+    })
+    .catch((e) => {
+      console.log("error", e);
+      return res
+        .status(400)
+        .send({ message: "Something went wrong, Please try again" });
+    });
+});
+//*****************************************************************Socket Section************************************************************************************/
 io.on("connection", (socket) => {
   console.log(`${socket.id} is connected`);
   //user Try to join a room
@@ -301,6 +318,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+//*****************************************************************End Socket Section*********************************************************************************/
 
 server.listen(PORT, () => {
   console.log(`listening on *:${PORT}`);
