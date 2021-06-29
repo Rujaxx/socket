@@ -230,7 +230,6 @@ io.on("connection", (socket) => {
       }
     }
   });
-
   // when the client emits 'new message', this listens and executes
   socket.on("send message", async (data) => {
     let checkUser = await getUserBySocketId(socket.id);
@@ -256,6 +255,46 @@ io.on("connection", (socket) => {
   socket.on("receive message", async (data) => {
     const allMsgData = await getAllMessages({ roomId: data });
     io.to(String(data)).emit("new message", {
+      status: 200,
+      data: allMsgData,
+    });
+  });
+  socket.on("send gameData", async (data) => {
+    let checkUser = await getUserBySocketId(socket.id);
+    if (checkUser.message) {
+      return socket.emit("received gameData", {
+        status: 400,
+        message: checkUser.message,
+      });
+    } else {
+      const checkansalreadyexsists = await getGameState({
+        answer: data.answer,
+        roomId: checkUser.roomId._id,
+      });
+      if (checkansalreadyexsists.message) {
+        return socket.emit("received gameData", {
+          status: 400,
+          message: checkansalreadyexsists.message,
+        });
+      } else {
+        const newGameState = await addGameState({
+          answer: data.answer,
+          userId: checkUser._id,
+          roomId: checkUser.roomId._id,
+        });
+        const allGameStates = await getAllGameStates({
+          roomId: checkUser.roomId._id,
+        });
+        io.to(String(checkUser.roomId._id)).emit("received gameData", {
+          status: 200,
+          data: allGameStates,
+        });
+      }
+    }
+  });
+  socket.on("receive gameData", async (data) => {
+    const allMsgData = await getAllGameStates({ roomId: data });
+    io.to(String(data)).emit("received gameData", {
       status: 200,
       data: allMsgData,
     });
@@ -309,6 +348,7 @@ io.on("connection", (socket) => {
       if (clients === undefined) {
         await deleteRoom(checkUser.roomId._id);
         await deleteRoomMessage(checkUser.roomId._id);
+        await deleteRoomGameState(checkUser.roomId._id);
       } else {
         io.to(String(checkUser.roomId._id)).emit("new room member", {
           status: 200,

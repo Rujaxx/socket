@@ -6,11 +6,11 @@ const createwithfield = async (fields) => {
 };
 //Read
 const findById = async (mongoId) => {
-  return await gameState.findById(mongoId).select("-__v").populate("room");
+  return await gameState.findById(mongoId).select("-__v");
 };
 const findbyfield = async (fields) => {
   //fields = {fieldname : fieldvalue}
-  return await gameState.find(fields).select("-__v").populate("room");
+  return await gameState.find(fields).select("-__v");
 };
 //Update
 const updatewithfield = async (fields, updateddata) => {
